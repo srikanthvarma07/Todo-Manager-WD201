@@ -5,19 +5,17 @@ const app = require("../app");
 
 let server, agent;
 
-describe("List the todo items", function () {
+describe("Todo test suite", () => {
   beforeAll(async () => {
     await db.sequelize.sync({ force: true });
     server = app.listen(3000, () => {});
     agent = request.agent(server);
   });
-
   afterAll(async () => {
     await db.sequelize.close();
     server.close();
   });
-
-  test("responds with json at /todos", async () => {
+  test("Creates a todo and responds with json at /todos POST endpoint", async () => {
     const response = await agent.post("/todos").send({
       title: "Buy milk",
       dueDate: new Date().toISOString(),
@@ -31,7 +29,7 @@ describe("List the todo items", function () {
     expect(parsedResponse.id).toBeDefined();
   });
 
-  test("Mark a todo as complete", async () => {
+  test("Marks a todo with the given ID as complete", async () => {
     const response = await agent.post("/todos").send({
       title: "Buy milk",
       dueDate: new Date().toISOString(),
@@ -48,20 +46,36 @@ describe("List the todo items", function () {
     const parsedUpdateResponse = JSON.parse(markCompleteResponse.text);
     expect(parsedUpdateResponse.completed).toBe(true);
   });
-
-  test("Delete todo using Id", async () => {
-    const todo = await agent.post("/todos").send({
-      title: "delete",
+  test("Fetches all todos in the database using /todos endpoint", async () => {
+    await agent.post("/todos").send({
+      title: "Buy xbox",
       dueDate: new Date().toISOString(),
       completed: false,
     });
-    const parsedResponse = JSON.parse(todo.text);
+    await agent.post("/todos").send({
+      title: "Buy ps3",
+      dueDate: new Date().toISOString(),
+      completed: false,
+    });
+    const response = await agent.get("/todos");
+    const parsedResponse = JSON.parse(response.text);
+
+    expect(parsedResponse.length).toBe(4);
+    expect(parsedResponse[3]["title"]).toBe("Buy ps3");
+  });
+
+  test("Deletes a todo with the given ID if it exists and sends a boolean response", async () => {
+    // FILL IN YOUR CODE HERE
+    const response = await agent.post("/todos").send({
+      title: "Go to market",
+      dueDate: new Date().toISOString(),
+      completed: false,
+    });
+    const parsedResponse = JSON.parse(response.text);
     const todoID = parsedResponse.id;
 
-    expect(parsedResponse.title).toBe("delete");
-
-    const response = await agent.delete(`/todos/${todoID}`);
-    const parsedDeleteReponse = JSON.parse(response.text);
-    expect(parsedDeleteReponse).toStrictEqual({});
+    const deleteTodoResponse = await agent.delete(`/todos/${todoID}`).send();
+    const parsedDeleteResponse = JSON.parse(deleteTodoResponse.text);
+    expect(parsedDeleteResponse).toBe(true);
   });
 });
