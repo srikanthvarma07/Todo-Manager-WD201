@@ -1,4 +1,12 @@
 body {
-    background-color: red;
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    color: black;
+    font-family: "Courier New", Courier, monospace;
+}
+
+.Todo-Item:hover .trash-icon {
+    display: block;
+}
+
+h5 {
+    display: inline;
 }
